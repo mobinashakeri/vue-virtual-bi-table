@@ -244,19 +244,6 @@ const {
 
 ---
 
-## 🗺️ Roadmap
-
-- [x] Sorting, global search & filtering
-- [x] Row selection (with select-all)
-- [x] Column show / hide
-- [x] Loading skeleton
-- [ ] Column pinning (multiple sticky columns)
-- [ ] Expandable / nested rows
-- [ ] Keyboard navigation & a11y pass
-- [ ] Publish as an installable npm package
-
----
-
 ## 👤 Author
 
 **Mobina Shakeri**
