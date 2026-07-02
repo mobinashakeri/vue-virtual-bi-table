@@ -12,7 +12,8 @@ permissions:
 
 concurrency:
   group: pages
-  cancel-in-progress: true
+  # Never cancel an in-flight Pages deploy — doing so jams the deployment queue.
+  cancel-in-progress: false
 
 jobs:
   build:
