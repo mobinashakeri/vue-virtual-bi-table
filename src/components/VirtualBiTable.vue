@@ -9,7 +9,7 @@
         @scroll="onHeaderScroll"
       >
         <draggable
-          v-model="tableHeaders"
+          v-model="tableHeaderItems"
           :wrapper-props="headerOptions"
           class="w-fit flex flex-nowrap bg-bg-primary"
           direction="horizontal"
@@ -28,7 +28,7 @@
           @change="change"
         >
           <template #item="{ element: header, index: headerIndex }">
-            <MResizable
+            <Resizable
               :id="header._id"
               v-model:width="header.width"
               :show-on-hover="false"
@@ -72,7 +72,7 @@
                   </span>
                 </button>
               </div>
-            </MResizable>
+            </Resizable>
           </template>
         </draggable>
       </div>
@@ -97,7 +97,7 @@
             class="flex h-11 items-center border-b border-slate-100"
           >
             <div
-              v-for="(h, i) in tableHeaders"
+              v-for="(h, i) in tableHeaderItems"
               :key="h._id"
               class="shrink-0 px-4"
               :style="{
@@ -140,10 +140,10 @@
           >
             <template #item="{ element: row, index }">
               <slot name="item" :row="row" :index="index">
-                <MTableRow
+                <TableRow
                   :class="taskDraggable ? 'body-handle' : ''"
                   :row="row.data"
-                  :headers="tableHeaders"
+                  :table-header-items="tableHeaderItems"
                   :should-show-cell="shouldShowCell"
                   :selectable="selectable"
                   :selected="selectedIds?.has(row.data._id)"
@@ -152,7 +152,7 @@
                   <template v-if="$slots.cell" #cell="slotProps">
                     <slot name="cell" v-bind="slotProps" />
                   </template>
-                </MTableRow>
+                </TableRow>
               </slot>
             </template>
           </draggable>
@@ -166,8 +166,8 @@
 import { computed, reactive, ref, useId, watch, nextTick, onMounted } from 'vue'
 import draggable from 'vuedraggable'
 import { useVirtualList, useIntersectionObserver } from '@vueuse/core'
-import MResizable from './MResizable.vue'
-import MTableRow from './MTableRow.vue'
+import Resizable from './Resizable.vue'
+import TableRow from './TableRow.vue'
 import type { Field } from '@/types/field.interface.ts'
 import type { Task } from '@/types/task.interface.ts'
 
@@ -236,12 +236,16 @@ const emit = defineEmits<{
   (e: 'toggleAll'): void
 }>()
 
-const tableHeaders = defineModel<Field[]>('headers', { default: () => [] })
-const items = defineModel<Task[]>('items', { default: () => [] })
+const tableHeaderItems = defineModel<Field[]>('tableHeaderItems', {
+  default: () => [],
+})
+const tableBodyItems = defineModel<Task[]>('tableBodyItems', {
+  default: () => [],
+})
 
 const headerDrag = ref<boolean>(false)
 
-const reactiveItems = computed(() => items.value || [])
+const reactiveItems = computed(() => tableBodyItems.value || [])
 
 const { list, containerProps, wrapperProps } = useVirtualList(reactiveItems, {
   itemHeight: props.itemHeight,
@@ -261,7 +265,7 @@ const onHeaderScroll = () => syncScroll(headerScroll.value, tableBody.value)
 const onBodyScroll = () => syncScroll(tableBody.value, headerScroll.value)
 
 const headerOptions = computed(() => {
-  const titleColumnWidth = tableHeaders.value?.[0]?.width || 300
+  const titleColumnWidth = tableHeaderItems.value?.[0]?.width || 300
   const leftScrollSensitivity = Math.max(
     SCROLL_SENSITIVITY_BUFFER,
     titleColumnWidth - SCROLL_SENSITIVITY_BUFFER,
@@ -287,7 +291,7 @@ const headerOptions = computed(() => {
 })
 
 const tableBodyWidth = computed<number>(() =>
-  (tableHeaders.value ?? []).reduce(
+  (tableHeaderItems.value ?? []).reduce(
     (acc, current) => acc + (current.width ?? 0),
     0,
   ),
@@ -310,7 +314,7 @@ const shouldShowCell = (headerItem: HeaderItem, headerIndex: number) => {
   if (headerDrag.value) return true
 
   // Fallback: if no headers are visible (observer failure), show all
-  if (visibleHeaders.value.length === 0 && tableHeaders.value?.length > 1) {
+  if (visibleHeaders.value.length === 0 && tableHeaderItems.value?.length > 1) {
     return true
   }
 
@@ -326,8 +330,8 @@ const onHeaderMove = ({ draggedContext }: any) => {
   if (index === 0 || futureIndex === 0) return false
 
   return !(
-    tableHeaders.value[index]?.draggable === false ||
-    tableHeaders.value[futureIndex]?.draggable === false
+    tableHeaderItems.value[index]?.draggable === false ||
+    tableHeaderItems.value[futureIndex]?.draggable === false
   )
 }
 
@@ -379,7 +383,7 @@ const setupHeaderObservers = () => {
 const tableHeaderMoved = (data: any) => {
   emit('headerMoved', data)
   nextTick(() => {
-    tableHeaders.value.forEach((header) => {
+    tableHeaderItems.value.forEach((header) => {
       visibilityMap[header._id] = true
     })
     setTimeout(() => setupHeaderObservers(), OBSERVER_SETUP_DELAY)
@@ -391,7 +395,7 @@ const resizeStart = () => emit('resizeStart')
 onMounted(() => setupHeaderObservers())
 
 watch(
-  () => tableHeaders.value,
+  () => tableHeaderItems.value,
   () => setupHeaderObservers(),
   { deep: false },
 )

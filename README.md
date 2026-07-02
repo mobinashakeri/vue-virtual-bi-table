@@ -124,7 +124,6 @@ src/
 - **[Tailwind CSS v4](https://tailwindcss.com/)** for styling
 - **[VueUse](https://vueuse.org/)** — `useVirtualList`, `useIntersectionObserver`, `onClickOutside`
 - **[vuedraggable](https://github.com/SortableJS/vue.draggable.next)** (SortableJS) for drag & drop
-- **[Pinia](https://pinia.vuejs.org/)** wired up for state management
 
 ---
 

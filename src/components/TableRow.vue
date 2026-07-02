@@ -3,7 +3,7 @@
     <div class="min-w-full w-fit flex">
       <div class="flex">
         <div
-          v-for="(headerItem, headerIndex) in headers"
+          v-for="(headerItem, headerIndex) in tableHeaderItems"
           :key="headerItem._id + row._id"
           class="w-fit flex items-center h-11 transition-colors group-hover:bg-slate-50"
           :class="{
@@ -47,10 +47,12 @@
 </template>
 
 <script setup lang="ts">
+import type { Field } from '@/types/field.interface'
+
 interface Props {
   row: any
-  headers: any[]
-  shouldShowCell: (headerItem: any, headerIndex: number) => boolean
+  tableHeaderItems: Field[]
+  shouldShowCell: (headerItem: Field, headerIndex: number) => boolean
   selectable?: boolean
   selected?: boolean
 }
