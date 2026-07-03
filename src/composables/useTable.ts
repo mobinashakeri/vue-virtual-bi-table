@@ -53,35 +53,49 @@ export function useTable(fields: Ref<Field[]>, tasks: Ref<Task[]>) {
 
   /* --------------------------- Search + rows ----------------------------- */
 
-  const rows = computed<Task[]>(() => {
-    const q = search.value.trim().toLowerCase()
+  // Whether the rendered view maps 1:1 onto `tasks` (no filter/sort reshaping it).
+  // Only then can a manual drag-reorder be written back to the source.
+  const isSourceOrder = computed(
+    () => !sortKey.value && search.value.trim() === '',
+  )
 
-    const result = q
-      ? tasks.value.filter((t) =>
-          t.field.some((f) =>
-            String(f.value ?? '')
-              .toLowerCase()
-              .includes(q),
-          ),
-        )
-      : tasks.value.slice()
+  const rows = computed<Task[]>({
+    get: () => {
+      const q = search.value.trim().toLowerCase()
 
-    if (sortKey.value) {
-      const key = sortKey.value
-      const dir = sortDir.value === 'asc' ? 1 : -1
-      result.sort((a, b) => {
-        const av = valueOf(a, key)
-        const bv = valueOf(b, key)
-        if (av == null) return 1
-        if (bv == null) return -1
-        if (typeof av === 'number' && typeof bv === 'number') {
-          return (av - bv) * dir
-        }
-        return String(av).localeCompare(String(bv)) * dir
-      })
-    }
+      const result = q
+        ? tasks.value.filter((t) =>
+            t.field.some((f) =>
+              String(f.value ?? '')
+                .toLowerCase()
+                .includes(q),
+            ),
+          )
+        : tasks.value.slice()
 
-    return result
+      if (sortKey.value) {
+        const key = sortKey.value
+        const dir = sortDir.value === 'asc' ? 1 : -1
+        result.sort((a, b) => {
+          const av = valueOf(a, key)
+          const bv = valueOf(b, key)
+          if (av == null) return 1
+          if (bv == null) return -1
+          if (typeof av === 'number' && typeof bv === 'number') {
+            return (av - bv) * dir
+          }
+          return String(av).localeCompare(String(bv)) * dir
+        })
+      }
+
+      return result
+    },
+    // Drag-to-reorder pushes a new row order back to the source, but only when
+    // the view isn't filtered or sorted (otherwise the mapping is ambiguous).
+    set: (next) => {
+      if (!isSourceOrder.value) return
+      tasks.value = next
+    },
   })
 
   /* ------------------------------ Selection ------------------------------ */
@@ -126,6 +140,7 @@ export function useTable(fields: Ref<Field[]>, tasks: Ref<Task[]>) {
     toggleColumn,
     // rows
     rows,
+    isSourceOrder,
     // selection
     selected,
     isSelected,

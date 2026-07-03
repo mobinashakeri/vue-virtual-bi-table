@@ -121,13 +121,13 @@
           :style="{ width: tableBodyWidth + 'px', minWidth: '50px' }"
         >
           <draggable
-            :list="list"
+            :list="draggableRows"
             class="flex flex-wrap min-w-full w-fit h-fit"
             direction="vertical"
             handle=".body-handle"
             tag="div"
-            :group="{ name: 'items', pull: 'clone', put: true }"
-            :sort="false"
+            :group="{ name: 'items', pull: true, put: true }"
+            :sort="itemDraggable"
             :move="checkCanMoveItem"
             :component-data="{
               attrs: { data_category_id: column },
@@ -136,24 +136,30 @@
               name: !itemDraggable ? 'flip-list' : null,
             }"
             :item-key="(item: any) => item.data._id"
-            @moved="moveRow"
+            @change="onBodyChange"
           >
+            <!--
+              TableRow must be the *direct* root of the #item template: vuedraggable
+              tags that root element with `data-draggable` (its drag selector). Wrapping
+              it in a <slot> outlet loses the tag, so rows become undraggable. Keep the
+              custom `item` slot as the v-else alternative.
+            -->
             <template #item="{ element: row, index }">
-              <slot name="item" :row="row" :index="index">
-                <TableRow
-                  :class="itemDraggable ? 'body-handle' : ''"
-                  :row="row.data"
-                  :table-header-items="tableHeaderItems"
-                  :should-show-cell="shouldShowCell"
-                  :selectable="selectable"
-                  :selected="selectedIds?.has(row.data._id)"
-                  @toggle="emit('toggleRow', row.data._id)"
-                >
-                  <template v-if="$slots.cell" #cell="slotProps">
-                    <slot name="cell" v-bind="slotProps" />
-                  </template>
-                </TableRow>
-              </slot>
+              <TableRow
+                v-if="!$slots.item"
+                :class="itemDraggable ? 'body-handle' : ''"
+                :row="row.data"
+                :table-header-items="tableHeaderItems"
+                :should-show-cell="shouldShowCell"
+                :selectable="selectable"
+                :selected="selectedIds?.has(row.data._id)"
+                @toggle="emit('toggleRow', row.data._id)"
+              >
+                <template v-if="$slots.cell" #cell="slotProps">
+                  <slot name="cell" v-bind="slotProps" />
+                </template>
+              </TableRow>
+              <slot v-else name="item" :row="row" :index="index" />
             </template>
           </draggable>
         </div>
@@ -215,6 +221,7 @@ const props = withDefaults(defineProps<Props>(), {
   itemHeight: 44,
   fixedHeader: true,
   sortable: true,
+  itemDraggable: false,
   column: undefined,
   loading: false,
   selectable: false,
@@ -249,6 +256,15 @@ const reactiveItems = computed(() => tableBodyItems.value || [])
 const { list, containerProps, wrapperProps } = useVirtualList(reactiveItems, {
   itemHeight: props.itemHeight,
   overscan: props.virtualScan,
+})
+
+// vuedraggable splices its bound array on drop, but `list` is a readonly computed
+// from useVirtualList — so we mirror the visible window into a writable ref and
+// let it drive the DnD. Reordering the source (below) re-derives `list`, which
+// flows back here and reconciles any transient drag state.
+const draggableRows = ref<Array<{ index: number; data: Task }>>([])
+watch(list, (v) => (draggableRows.value = (v ?? []).slice()), {
+  immediate: true,
 })
 
 // Keep the header and body horizontal scroll positions in sync.
@@ -340,7 +356,38 @@ const checkCanMoveItem = ({ draggedContext }: any) => {
   if (!props.itemDraggable || draggedContext.element.data.root) return false
 }
 
-const moveRow = (data: any) => emit('moveRow', data)
+// Reorder the bound rows when a row is dragged to a new position. `list` is the
+// virtualized window, so we translate the drop into the full `tableBodyItems`
+// array by matching row ids, then reassign the model (parent must v-model it).
+const onBodyChange = (evt: any) => {
+  if (!evt?.moved) return
+  const movedId = evt.moved.element?.data?._id
+  if (movedId == null) return
+
+  const items = (tableBodyItems.value ?? []).slice()
+  const from = items.findIndex((t) => t._id === movedId)
+  if (from === -1) return
+  const [row] = items.splice(from, 1)
+
+  // The row now directly below the drop point (in the reordered window) tells us
+  // where to insert; fall back to the row above it, or append at the end.
+  const newIndex = evt.moved.newIndex
+  const afterItem = draggableRows.value[newIndex + 1]?.data
+  const beforeItem = draggableRows.value[newIndex - 1]?.data
+  let to: number
+  if (afterItem && afterItem._id !== movedId) {
+    to = items.findIndex((t) => t._id === afterItem._id)
+  } else if (beforeItem && beforeItem._id !== movedId) {
+    to = items.findIndex((t) => t._id === beforeItem._id) + 1
+  } else {
+    to = items.length
+  }
+  if (to === -1) to = items.length
+
+  items.splice(to, 0, row)
+  tableBodyItems.value = items
+  emit('moveRow', evt.moved)
+}
 
 const setupHeaderObservers = () => {
   observerInstances.forEach((observer) => observer.stop())

@@ -71,10 +71,11 @@
     >
       <VirtualBiTable
         v-model:table-header-items="visibleColumns"
-        :table-body-items="rows"
+        v-model:table-body-items="rows"
         :body-height="560"
         :loading="loading"
         selectable
+        :item-draggable="isSourceOrder"
         :sort-key="sortKey"
         :sort-dir="sortDir"
         :selected-ids="selected"
@@ -88,7 +89,7 @@
 
     <p class="mt-3 text-center text-xs text-slate-400">
       Drag a column header to reorder · hover a column edge to resize · click a
-      header to sort
+      header to sort · drag a row to move it (when unsorted &amp; unfiltered)
     </p>
   </div>
 </template>
@@ -112,6 +113,7 @@ const {
   isHidden,
   toggleColumn,
   rows,
+  isSourceOrder,
   selected,
   toggleRow,
   allSelected,
