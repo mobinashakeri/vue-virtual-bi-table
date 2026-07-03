@@ -18,7 +18,7 @@ all without dropping a frame.
 
 <br /><br />
 
-**[🔗 Live Demo](https://mobinashakeri.github.io/vue-virtual-table/)** &nbsp;·&nbsp; deployed automatically to GitHub Pages
+**[🔗 Live Demo](https://mobinashakeri.github.io/vue-virtual-bi-table/)** &nbsp;·&nbsp; deployed automatically to GitHub Pages
 
 </div>
 

@@ -7,7 +7,7 @@ import tailwindcss from '@tailwindcss/vite'
 // https://vite.dev/config/
 export default defineConfig({
   // GitHub Pages serves a project site under /<repo>/; dev stays at root.
-  base: process.env.NODE_ENV === 'production' ? '/vue-virtual-table/' : '/',
+  base: process.env.NODE_ENV === 'production' ? '/vue-virtual-bi-table/' : '/',
   plugins: [vue(), tailwindcss()],
   resolve: {
     alias: {
