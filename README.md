@@ -104,15 +104,17 @@ sized placeholder instead of their real content — preserving layout while skip
 src/
 ├── components/
 │   ├── VirtualBiTable.vue   # Orchestrator: virtualization, observers, scroll sync, DnD
-│   ├── MTableRow.vue        # A single row — renders visible cells via shouldShowCell()
-│   └── MResizable.vue       # Reusable resize wrapper (drag handles + width/height clamps)
+│   ├── TaskTable.vue        # Demo host: toolbar (search, columns, selection, reload)
+│   │                        #   + useTable / useMockData wiring around VirtualBiTable
+│   ├── TableRow.vue         # A single row — renders visible cells via shouldShowCell()
+│   └── Resizable.vue        # Reusable resize wrapper (drag handles + width/height clamps)
 ├── composables/
 │   ├── useTable.ts          # Data pipeline: search → filter → sort, selection, visibility
 │   └── useMockData.ts       # Generates 1,000+ realistic tasks for benchmarking
 ├── types/
 │   ├── field.interface.ts   # Column definition (label, width, sticky, draggable…)
 │   └── task.interface.ts    # Row definition (id + field values)
-└── App.vue                  # Demo harness (toolbar: search, columns, selection, reload)
+└── App.vue                  # Page shell (title header) that renders <TaskTable />
 ```
 
 ---
@@ -176,7 +178,10 @@ generate();
 </script>
 
 <template>
-  <VirtualBiTable v-model:headers="fields" v-model:items="tasks" />
+  <VirtualBiTable
+    v-model:table-header-items="fields"
+    v-model:table-body-items="tasks"
+  />
 </template>
 ```
 
@@ -201,8 +206,8 @@ const {
 <template>
   <input v-model="search" placeholder="Search…" />
   <VirtualBiTable
-    v-model:headers="visibleColumns"
-    :items="rows"
+    v-model:table-header-items="visibleColumns"
+    :table-body-items="rows"
     selectable
     :sort-key="sortKey"
     :sort-dir="sortDir"
@@ -220,8 +225,8 @@ const {
 
 | Prop | Type | Default | Description |
 |---|---|---|---|
-| `headers` (`v-model`) | `Field[]` | `[]` | Column definitions (label, width, `sticky`, `draggable`). Two-way for reorder/resize. |
-| `items` (`v-model`) | `Task[]` | `[]` | The rows to render. |
+| `tableHeaderItems` (`v-model`) | `Field[]` | `[]` | Column definitions (label, width, `sticky`, `draggable`). Two-way for reorder/resize. |
+| `tableBodyItems` (`v-model`) | `Task[]` | `[]` | The rows to render. |
 | `bodyHeight` | `number` | `300` | Height of the scroll viewport (px). |
 | `itemHeight` | `number` | `44` | Row height, used by the virtualizer (px). |
 | `virtualScan` | `number` | `50` | Overscan — extra rows rendered outside the viewport. |
@@ -240,7 +245,7 @@ const {
 
 ### Slots
 
-- `#item="{ row, index }"` — override an entire row.
+- `#item="{ row, index }"` — override an entire row (`row` is the virtualized wrapper; your `Task` is `row.data`).
 - `#cell="{ header, index, row }"` — override how a single cell renders (badges, avatars, …). The component ships **no** hard-coded cell styling, so all visual design lives here in the consumer.
 
 ---
