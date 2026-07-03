@@ -7,9 +7,16 @@
           :key="headerItem._id + row._id"
           class="w-fit flex items-center h-11 transition-colors group-hover:bg-slate-50"
           :class="{
-            'sticky left-0 z-1 bg-white group-hover:bg-slate-50':
-              headerIndex === 0 || headerItem.sticky,
-            'bg-indigo-50/60! group-hover:bg-indigo-50!': selected,
+            'sticky left-0 z-1': headerIndex === 0 || headerItem.sticky,
+            'bg-white': (headerIndex === 0 || headerItem.sticky) && !selected,
+            // The sticky column floats above the other cells during horizontal
+            // scroll, so its selected background must be opaque — otherwise the
+            // cells sliding underneath show through the tint.
+            'bg-indigo-50! group-hover:bg-indigo-50!':
+              selected && (headerIndex === 0 || headerItem.sticky),
+            // Non-sticky cells overlap nothing, so the translucent tint is fine.
+            'bg-indigo-50/60! group-hover:bg-indigo-50!':
+              selected && !(headerIndex === 0 || headerItem.sticky),
           }"
           :style="{
             width: headerItem.width + 'px',
