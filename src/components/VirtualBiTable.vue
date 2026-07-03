@@ -128,20 +128,20 @@
             tag="div"
             :group="{ name: 'items', pull: 'clone', put: true }"
             :sort="false"
-            :move="checkCanMoveTask"
+            :move="checkCanMoveItem"
             :component-data="{
               attrs: { data_category_id: column },
               tag: 'div',
               type: 'transition-group',
-              name: !taskDraggable ? 'flip-list' : null,
+              name: !itemDraggable ? 'flip-list' : null,
             }"
             :item-key="(item: any) => item.data._id"
-            @moved="moveTask"
+            @moved="moveRow"
           >
             <template #item="{ element: row, index }">
               <slot name="item" :row="row" :index="index">
                 <TableRow
-                  :class="taskDraggable ? 'body-handle' : ''"
+                  :class="itemDraggable ? 'body-handle' : ''"
                   :row="row.data"
                   :table-header-items="tableHeaderItems"
                   :should-show-cell="shouldShowCell"
@@ -186,7 +186,7 @@ interface Props {
   itemHeight?: number
   fixedHeader?: boolean
   sortable?: boolean
-  taskDraggable?: boolean
+  itemDraggable?: boolean
   column?: any
   loading?: boolean
   selectable?: boolean
@@ -215,7 +215,6 @@ const props = withDefaults(defineProps<Props>(), {
   itemHeight: 44,
   fixedHeader: true,
   sortable: true,
-  taskDraggable: false,
   column: undefined,
   loading: false,
   selectable: false,
@@ -230,7 +229,7 @@ const emit = defineEmits<{
   (e: 'change', data: any): void
   (e: 'headerMoved', data: any): void
   (e: 'resizeStart'): void
-  (e: 'moveTask', data: any): void
+  (e: 'moveRow', data: any): void
   (e: 'sort', id: string): void
   (e: 'toggleRow', id: string): void
   (e: 'toggleAll'): void
@@ -265,7 +264,7 @@ const onHeaderScroll = () => syncScroll(headerScroll.value, tableBody.value)
 const onBodyScroll = () => syncScroll(tableBody.value, headerScroll.value)
 
 const headerOptions = computed(() => {
-  const titleColumnWidth = tableHeaderItems.value?.[0]?.width || 300
+  const titleColumnWidth = tableHeaderItems.value?.[0]?.width || 250
   const leftScrollSensitivity = Math.max(
     SCROLL_SENSITIVITY_BUFFER,
     titleColumnWidth - SCROLL_SENSITIVITY_BUFFER,
@@ -337,11 +336,11 @@ const onHeaderMove = ({ draggedContext }: any) => {
 
 const change = (data: any) => emit('change', data)
 
-const checkCanMoveTask = ({ draggedContext }: any) => {
-  if (!props.taskDraggable || draggedContext.element.data.root) return false
+const checkCanMoveItem = ({ draggedContext }: any) => {
+  if (!props.itemDraggable || draggedContext.element.data.root) return false
 }
 
-const moveTask = (data: any) => emit('moveTask', data)
+const moveRow = (data: any) => emit('moveRow', data)
 
 const setupHeaderObservers = () => {
   observerInstances.forEach((observer) => observer.stop())

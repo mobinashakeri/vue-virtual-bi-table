@@ -232,7 +232,7 @@ const {
 | `virtualScan` | `number` | `50` | Overscan — extra rows rendered outside the viewport. |
 | `fixedHeader` | `boolean` | `true` | Keep the header row sticky. |
 | `sortable` | `boolean` | `true` | Allow column drag-to-reorder. |
-| `taskDraggable` | `boolean` | `false` | Allow row drag-to-move. |
+| `itemDraggable` | `boolean` | `false` | Allow row drag-to-move. |
 | `loading` | `boolean` | `false` | Show the skeleton placeholder. |
 | `selectable` | `boolean` | `false` | Render selection checkboxes. |
 | `sortKey` / `sortDir` | `string` / `"asc"｜"desc"` | — | Active sort column & direction (for the indicator). |
@@ -241,7 +241,7 @@ const {
 
 ### Emits
 
-`sort` · `toggleRow` · `toggleAll` · `change` · `headerMoved` · `resizeStart` · `moveTask`
+`sort` · `toggleRow` · `toggleAll` · `change` · `headerMoved` · `resizeStart` · `moveRow`
 
 ### Slots
 
