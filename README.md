@@ -18,7 +18,7 @@ all without dropping a frame.
 
 <br /><br />
 
-**[🔗 Live Demo](https://mo-bi-na-sha-ke-ri.github.io/vue-virtual-table/)** &nbsp;·&nbsp; deployed automatically to GitHub Pages
+**[🔗 Live Demo](https://mobinashakeri.github.io/vue-virtual-table/)** &nbsp;·&nbsp; deployed automatically to GitHub Pages
 
 </div>
 
@@ -247,7 +247,7 @@ const {
 ## 👤 Author
 
 **Mobina Shakeri**
-[GitHub](https://github.com/Mo-bi-na-sha-ke-ri) · [LinkedIn](https://www.linkedin.com/in/mobina-shakeri)
+[GitHub](https://github.com/mobinashakeri) · [LinkedIn](https://www.linkedin.com/in/mobina-shakeri)
 
 ---
 
