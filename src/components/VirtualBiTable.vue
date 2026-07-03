@@ -138,15 +138,8 @@
             :item-key="(item: any) => item.data._id"
             @change="onBodyChange"
           >
-            <!--
-              TableRow must be the *direct* root of the #item template: vuedraggable
-              tags that root element with `data-draggable` (its drag selector). Wrapping
-              it in a <slot> outlet loses the tag, so rows become undraggable. Keep the
-              custom `item` slot as the v-else alternative.
-            -->
-            <template #item="{ element: row, index }">
+            <template #item="{ element: row }">
               <TableRow
-                v-if="!$slots.item"
                 :class="itemDraggable ? 'body-handle' : ''"
                 :row="row.data"
                 :table-header-items="tableHeaderItems"
@@ -154,12 +147,7 @@
                 :selectable="selectable"
                 :selected="selectedIds?.has(row.data._id)"
                 @toggle="emit('toggleRow', row.data._id)"
-              >
-                <template v-if="$slots.cell" #cell="slotProps">
-                  <slot name="cell" v-bind="slotProps" />
-                </template>
-              </TableRow>
-              <slot v-else name="item" :row="row" :index="index" />
+              />
             </template>
           </draggable>
         </div>

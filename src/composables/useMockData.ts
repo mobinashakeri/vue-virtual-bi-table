@@ -7,7 +7,7 @@ import type { Field } from '../types/field.interface'
 /* -------------------------------------------------------------------------- */
 
 const COLUMNS: Omit<Field, 'value'>[] = [
-  { _id: 'title', label: 'Title', width: 320, sticky: true },
+  { _id: 'title', label: 'Title', width: 300, sticky: true },
   { _id: 'status', label: 'Status', width: 150 },
   { _id: 'priority', label: 'Priority', width: 130 },
   { _id: 'severity', label: 'Severity', width: 140 },

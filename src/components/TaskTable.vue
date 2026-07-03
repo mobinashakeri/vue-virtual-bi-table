@@ -29,7 +29,7 @@
         </button>
       </div>
 
-      <div class="ml-auto flex items-center gap-2">
+      <div class="mx-auto md:ml-auto md:mr-0 w-full md:w-auto flex items-center gap-2">
         <!-- Column show/hide -->
         <details ref="columnsMenu" class="relative">
           <summary

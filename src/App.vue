@@ -4,7 +4,7 @@
       <header class="mb-6">
         <div class="flex items-center gap-3">
           <span
-            class="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600 text-lg text-white shadow-sm"
+            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-lg text-white shadow-sm"
           >
             🗂️
           </span>
