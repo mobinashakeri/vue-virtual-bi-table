@@ -42,12 +42,13 @@ caps it there.)
 
 <br />
 
-> 📹 **Demo**
->
-> _Add a screen recording here to make the README pop on LinkedIn:_
-> `![demo](docs/demo.gif)`
->
-> _Record the table scrolling through 1,000 rows, dragging a column, and resizing one._
+<div align="center">
+
+![Vue Virtual Table demo — vertical row scrolling, horizontal column virtualization, drag-to-reorder and column resize](docs/demo.gif)
+
+_1,000 rows × 20 columns — vertical + horizontal virtualization, drag-to-reorder, and live resize._
+
+</div>
 
 ---
 
