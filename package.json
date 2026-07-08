@@ -1,27 +1,68 @@
 {
   "name": "vue-virtual-bi-table",
-  "version": "0.0.0",
-  "private": true,
+  "version": "0.1.0",
+  "description": "A high-performance, two-axis virtualized data table for Vue 3 — tens of thousands of rows × hundreds of columns, with drag-to-reorder, resizable sticky columns, sorting, and fully customizable header/cell slots.",
   "type": "module",
+  "license": "MIT",
+  "author": "Mobina Shakeri",
+  "homepage": "https://github.com/mobinashakeri/vue-virtual-bi-table#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mobinashakeri/vue-virtual-bi-table.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mobinashakeri/vue-virtual-bi-table/issues"
+  },
+  "keywords": [
+    "vue",
+    "vue3",
+    "typescript",
+    "virtual-scroll",
+    "virtualization",
+    "data-table",
+    "data-grid",
+    "table",
+    "column-virtualization"
+  ],
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/vue-virtual-bi-table.umd.js",
+  "module": "./dist/vue-virtual-bi-table.es.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/vue-virtual-bi-table.es.js",
+      "require": "./dist/vue-virtual-bi-table.umd.js"
+    },
+    "./style.css": "./dist/style.css"
+  },
+  "sideEffects": [
+    "**/*.css"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
+    "build:lib": "vue-tsc --noEmit && vite build --config vite.lib.config.ts",
     "preview": "vite preview",
     "type-check": "vue-tsc --noEmit",
     "test": "vitest",
     "test:run": "vitest run",
     "lint": "eslint . --fix",
-    "format": "prettier --write src/"
+    "format": "prettier --write src/",
+    "prepack": "npm run build:lib"
+  },
+  "peerDependencies": {
+    "vue": "^3.5.0"
   },
   "dependencies": {
-    "@tailwindcss/vite": "^4.3.2",
     "@vueuse/core": "^14.3.0",
-    "tailwindcss": "^4.3.2",
-    "vue": "^3.5.13",
     "vuedraggable": "^4.1.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@tailwindcss/vite": "^4.3.2",
     "@types/node": "^20.19.43",
     "@vitejs/plugin-vue": "^5.2.1",
     "@vue/test-utils": "^2.4.11",
@@ -31,10 +72,13 @@
     "eslint-plugin-vue": "^10.9.2",
     "jsdom": "^29.1.1",
     "prettier": "^3.9.4",
+    "tailwindcss": "^4.3.2",
     "typescript": "~5.7.3",
     "typescript-eslint": "^8.62.1",
     "vite": "^6.0.7",
+    "vite-plugin-dts": "^5.0.3",
     "vitest": "^4.1.9",
+    "vue": "^3.5.13",
     "vue-tsc": "^2.2.0"
   }
 }

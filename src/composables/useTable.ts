@@ -1,6 +1,6 @@
 import { computed, ref, type Ref } from 'vue'
-import type { Field } from '@/types/field.interface'
-import type { Task } from '@/types/task.interface'
+import type { Field } from '../types/field.interface'
+import type { Task } from '../types/task.interface'
 
 export type SortDir = 'asc' | 'desc'
 

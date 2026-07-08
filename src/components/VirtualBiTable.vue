@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full h-fit">
+  <div class="vbt-root w-full h-fit">
     <div :id="componentId" class="w-full h-fit">
       <!-- Header: its own horizontal scroller, kept in sync with the body -->
       <div
@@ -62,8 +62,8 @@
                   @mousedown.stop
                 />
                 <slot
-                  v-if="hasSlot('col-header-' + columnKey(header))"
-                  :name="'col-header-' + columnKey(header)"
+                  v-if="hasSlot(colHeaderSlot(header))"
+                  :name="colHeaderSlot(header)"
                   v-bind="headerScope(header, headerIndex)"
                 />
                 <slot
@@ -182,8 +182,8 @@ import draggable from 'vuedraggable'
 import { useVirtualList, useIntersectionObserver } from '@vueuse/core'
 import Resizable from './Resizable.vue'
 import TableRow from './TableRow.vue'
-import type { Field } from '@/types/field.interface.ts'
-import type { Task } from '@/types/task.interface.ts'
+import type { Field } from '../types/field.interface'
+import type { Task } from '../types/task.interface'
 
 interface HeaderItem {
   _id: string
@@ -280,6 +280,11 @@ const slots = defineSlots<{
 const hasSlot = (name: string) => name in slots
 const columnKey = (column: Field) => column.key ?? column._id
 
+// Template-literal-typed so it matches the typed slot keys (a plain `string`
+// can't index the typed slots).
+const colHeaderSlot = (column: Field) =>
+  `col-header-${columnKey(column)}` as const
+
 const headerScope = (column: Field, index: number): HeaderSlotScope => ({
   column,
   index,
@@ -288,10 +293,11 @@ const headerScope = (column: Field, index: number): HeaderSlotScope => ({
   toggleSort: () => emit('sort', column._id),
 })
 
-const cellSlotNames = computed(() =>
-  Object.keys(slots).filter(
-    (n) => n === 'col-cell' || n.startsWith('col-cell-'),
-  ),
+const cellSlotNames = computed(
+  () =>
+    Object.keys(slots).filter(
+      (n) => n === 'col-cell' || n.startsWith('col-cell-'),
+    ) as Array<'col-cell' | `col-cell-${string}`>,
 )
 
 const cols = defineModel<Field[]>('cols', { default: () => [] })

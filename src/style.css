@@ -1,0 +1,19 @@
+/*
+ * Library stylesheet — ships only the utilities the components use plus the
+ * theme tokens. No Tailwind preflight, so importing this never resets a
+ * consumer's page; a scoped border-box keeps the utilities behaving correctly.
+ */
+@import 'tailwindcss/theme' layer(theme);
+@import 'tailwindcss/utilities' layer(utilities);
+
+@theme {
+  --color-bg-primary: #ffffff;
+  --color-secondary: #e2e8f0;
+}
+
+.vbt-root,
+.vbt-root *,
+.vbt-root *::before,
+.vbt-root *::after {
+  box-sizing: border-box;
+}

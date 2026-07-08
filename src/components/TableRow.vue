@@ -51,7 +51,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Field } from '@/types/field.interface'
+import type { Field } from '../types/field.interface'
 
 interface Props {
   row: any
