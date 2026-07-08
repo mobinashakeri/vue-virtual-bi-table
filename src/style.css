@@ -2,9 +2,14 @@
  * Library stylesheet — ships only the utilities the components use plus the
  * theme tokens. No Tailwind preflight, so importing this never resets a
  * consumer's page; a scoped border-box keeps the utilities behaving correctly.
+ *
+ * Utilities are intentionally UNLAYERED: a consumer without Tailwind often has
+ * a global reset (e.g. `* { margin:0; padding:0 }`), and cascade-layered rules
+ * lose to unlayered ones — which would strip the table's spacing. Unlayered
+ * utilities keep normal class specificity and apply reliably anywhere.
  */
-@import 'tailwindcss/theme' layer(theme);
-@import 'tailwindcss/utilities' layer(utilities);
+@import 'tailwindcss/theme';
+@import 'tailwindcss/utilities';
 
 @theme {
   --color-bg-primary: #ffffff;
