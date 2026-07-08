@@ -9,7 +9,7 @@
         @scroll="onHeaderScroll"
       >
         <draggable
-          v-model="tableHeaderItems"
+          v-model="cols"
           :wrapper-props="headerOptions"
           class="w-fit flex flex-nowrap bg-bg-primary"
           direction="horizontal"
@@ -61,7 +61,18 @@
                   @click.stop
                   @mousedown.stop
                 />
+                <slot
+                  v-if="hasSlot('col-header-' + columnKey(header))"
+                  :name="'col-header-' + columnKey(header)"
+                  v-bind="headerScope(header, headerIndex)"
+                />
+                <slot
+                  v-else-if="hasSlot('col-header')"
+                  name="col-header"
+                  v-bind="headerScope(header, headerIndex)"
+                />
                 <button
+                  v-else
                   type="button"
                   class="flex grow items-center gap-1 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 select-none hover:text-slate-700"
                   @click="emit('sort', header._id)"
@@ -97,7 +108,7 @@
             class="flex h-11 items-center border-b border-slate-100"
           >
             <div
-              v-for="(h, i) in tableHeaderItems"
+              v-for="(h, i) in cols"
               :key="h._id"
               class="shrink-0 px-4"
               :style="{
@@ -118,7 +129,7 @@
         <div
           v-else
           v-bind="wrapperProps"
-          :style="{ width: tableBodyWidth + 'px', minWidth: '50px' }"
+          :style="{ width: tableBodyWidth + 'px', minWidth: '100px' }"
         >
           <draggable
             :list="draggableRows"
@@ -142,12 +153,21 @@
               <TableRow
                 :class="itemDraggable ? 'body-handle' : ''"
                 :row="row.data"
-                :table-header-items="tableHeaderItems"
+                :row-index="row.index"
+                :cols="cols"
                 :should-show-cell="shouldShowCell"
                 :selectable="selectable"
                 :selected="selectedIds?.has(row.data._id)"
                 @toggle="emit('toggleRow', row.data._id)"
-              />
+              >
+                <template
+                  v-for="name in cellSlotNames"
+                  :key="name"
+                  #[name]="scope"
+                >
+                  <slot :name="name" v-bind="scope" />
+                </template>
+              </TableRow>
             </template>
           </draggable>
         </div>
@@ -230,26 +250,63 @@ const emit = defineEmits<{
   (e: 'toggleAll'): void
 }>()
 
-const tableHeaderItems = defineModel<Field[]>('tableHeaderItems', {
-  default: () => [],
+interface HeaderSlotScope {
+  column: Field
+  index: number
+  sorted: boolean
+  dir: 'asc' | 'desc'
+  toggleSort: () => void
+}
+
+interface CellSlotScope {
+  column: Field
+  index: number
+  row: any
+  rowIndex: number | undefined
+  value: any
+}
+
+const slots = defineSlots<{
+  /** Every column header. */
+  'col-header'?: (scope: HeaderSlotScope) => any
+  /** One column's header, e.g. `#col-header-status`. */
+  [name: `col-header-${string}`]: (scope: HeaderSlotScope) => any
+  /** Every body cell. */
+  'col-cell'?: (scope: CellSlotScope) => any
+  /** One column's body cell, e.g. `#col-cell-status`. */
+  [name: `col-cell-${string}`]: (scope: CellSlotScope) => any
+}>()
+
+const hasSlot = (name: string) => name in slots
+const columnKey = (column: Field) => column.key ?? column._id
+
+const headerScope = (column: Field, index: number): HeaderSlotScope => ({
+  column,
+  index,
+  sorted: props.sortKey === column._id,
+  dir: props.sortDir,
+  toggleSort: () => emit('sort', column._id),
 })
-const tableBodyItems = defineModel<Task[]>('tableBodyItems', {
-  default: () => [],
-})
+
+const cellSlotNames = computed(() =>
+  Object.keys(slots).filter(
+    (n) => n === 'col-cell' || n.startsWith('col-cell-'),
+  ),
+)
+
+const cols = defineModel<Field[]>('cols', { default: () => [] })
+const rows = defineModel<Task[]>('rows', { default: () => [] })
 
 const headerDrag = ref<boolean>(false)
 
-const reactiveItems = computed(() => tableBodyItems.value || [])
+const reactiveItems = computed(() => rows.value || [])
 
 const { list, containerProps, wrapperProps } = useVirtualList(reactiveItems, {
   itemHeight: props.itemHeight,
   overscan: props.virtualScan,
 })
 
-// vuedraggable splices its bound array on drop, but `list` is a readonly computed
-// from useVirtualList — so we mirror the visible window into a writable ref and
-// let it drive the DnD. Reordering the source (below) re-derives `list`, which
-// flows back here and reconciles any transient drag state.
+// `list` is a readonly computed; vuedraggable needs a mutable array to splice.
 const draggableRows = ref<Array<{ index: number; data: Task }>>([])
 watch(list, (v) => (draggableRows.value = (v ?? []).slice()), {
   immediate: true,
@@ -268,7 +325,7 @@ const onHeaderScroll = () => syncScroll(headerScroll.value, tableBody.value)
 const onBodyScroll = () => syncScroll(tableBody.value, headerScroll.value)
 
 const headerOptions = computed(() => {
-  const titleColumnWidth = tableHeaderItems.value?.[0]?.width || 250
+  const titleColumnWidth = cols.value?.[0]?.width || 250
   const leftScrollSensitivity = Math.max(
     SCROLL_SENSITIVITY_BUFFER,
     titleColumnWidth - SCROLL_SENSITIVITY_BUFFER,
@@ -294,7 +351,7 @@ const headerOptions = computed(() => {
 })
 
 const tableBodyWidth = computed<number>(() =>
-  (tableHeaderItems.value ?? []).reduce(
+  (cols.value ?? []).reduce(
     (acc, current) => acc + (current.width ?? 0),
     0,
   ),
@@ -317,7 +374,7 @@ const shouldShowCell = (headerItem: HeaderItem, headerIndex: number) => {
   if (headerDrag.value) return true
 
   // Fallback: if no headers are visible (observer failure), show all
-  if (visibleHeaders.value.length === 0 && tableHeaderItems.value?.length > 1) {
+  if (visibleHeaders.value.length === 0 && cols.value?.length > 1) {
     return true
   }
 
@@ -333,8 +390,8 @@ const onHeaderMove = ({ draggedContext }: any) => {
   if (index === 0 || futureIndex === 0) return false
 
   return !(
-    tableHeaderItems.value[index]?.draggable === false ||
-    tableHeaderItems.value[futureIndex]?.draggable === false
+    cols.value[index]?.draggable === false ||
+    cols.value[futureIndex]?.draggable === false
   )
 }
 
@@ -344,21 +401,17 @@ const checkCanMoveItem = ({ draggedContext }: any) => {
   if (!props.itemDraggable || draggedContext.element.data.root) return false
 }
 
-// Reorder the bound rows when a row is dragged to a new position. `list` is the
-// virtualized window, so we translate the drop into the full `tableBodyItems`
-// array by matching row ids, then reassign the model (parent must v-model it).
+// Translate an in-window drag into a reorder of the full `rows` model, by id.
 const onBodyChange = (evt: any) => {
   if (!evt?.moved) return
   const movedId = evt.moved.element?.data?._id
   if (movedId == null) return
 
-  const items = (tableBodyItems.value ?? []).slice()
+  const items = (rows.value ?? []).slice()
   const from = items.findIndex((t) => t._id === movedId)
   if (from === -1) return
   const [row] = items.splice(from, 1)
 
-  // The row now directly below the drop point (in the reordered window) tells us
-  // where to insert; fall back to the row above it, or append at the end.
   const newIndex = evt.moved.newIndex
   const afterItem = draggableRows.value[newIndex + 1]?.data
   const beforeItem = draggableRows.value[newIndex - 1]?.data
@@ -373,7 +426,7 @@ const onBodyChange = (evt: any) => {
   if (to === -1) to = items.length
 
   items.splice(to, 0, row)
-  tableBodyItems.value = items
+  rows.value = items
   emit('moveRow', evt.moved)
 }
 
@@ -417,7 +470,7 @@ const setupHeaderObservers = () => {
 const tableHeaderMoved = (data: any) => {
   emit('headerMoved', data)
   nextTick(() => {
-    tableHeaderItems.value.forEach((header) => {
+    cols.value.forEach((header) => {
       visibilityMap[header._id] = true
     })
     setTimeout(() => setupHeaderObservers(), OBSERVER_SETUP_DELAY)
@@ -429,7 +482,7 @@ const resizeStart = () => emit('resizeStart')
 onMounted(() => setupHeaderObservers())
 
 watch(
-  () => tableHeaderItems.value,
+  () => cols.value,
   () => setupHeaderObservers(),
   { deep: false },
 )

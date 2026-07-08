@@ -3,7 +3,7 @@
     <div class="min-w-full w-fit flex">
       <div class="flex">
         <div
-          v-for="(headerItem, headerIndex) in tableHeaderItems"
+          v-for="(headerItem, headerIndex) in cols"
           :key="headerItem._id + row._id"
           class="w-fit flex items-center h-11 transition-colors group-hover:bg-slate-50"
           :class="{
@@ -30,10 +30,14 @@
               @change="emit('toggle')"
             />
             <slot
-              name="cell"
-              :header="headerItem"
-              :index="headerIndex"
-              :row="row"
+              v-if="$slots['col-cell-' + columnKey(headerItem)]"
+              :name="'col-cell-' + columnKey(headerItem)"
+              v-bind="cellScope(headerItem, headerIndex)"
+            />
+            <slot
+              v-else
+              name="col-cell"
+              v-bind="cellScope(headerItem, headerIndex)"
             >
               <span class="truncate text-slate-600">
                 {{ valueOf(headerItem) }}
@@ -51,7 +55,8 @@ import type { Field } from '@/types/field.interface'
 
 interface Props {
   row: any
-  tableHeaderItems: Field[]
+  rowIndex?: number
+  cols: Field[]
   shouldShowCell: (headerItem: Field, headerIndex: number) => boolean
   selectable?: boolean
   selected?: boolean
@@ -62,4 +67,14 @@ const emit = defineEmits<{ (e: 'toggle'): void }>()
 
 const valueOf = (headerItem: any) =>
   props.row.field.find((f: any) => f._id === headerItem._id)?.value
+
+const columnKey = (column: Field) => column.key ?? column._id
+
+const cellScope = (column: Field, index: number) => ({
+  column,
+  index,
+  row: props.row,
+  rowIndex: props.rowIndex,
+  value: valueOf(column),
+})
 </script>

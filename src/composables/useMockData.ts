@@ -8,8 +8,9 @@ import type { Field } from '../types/field.interface'
 
 const COLUMNS: Omit<Field, 'value'>[] = [
   { _id: 'title', label: 'Title', width: 300, sticky: true },
-  { _id: 'status', label: 'Status', width: 150 },
-  { _id: 'priority', label: 'Priority', width: 130 },
+  // Opaque _id + friendly `key`: slots target the `key` (#col-cell-status), not _id.
+  { _id: 'col_8f21a9', key: 'status', label: 'Status', width: 150 },
+  { _id: 'priority', key: 'priority', label: 'Priority', width: 130 },
   { _id: 'severity', label: 'Severity', width: 140 },
   { _id: 'assignee', label: 'Assignee', width: 190 },
   { _id: 'reporter', label: 'Reporter', width: 190 },
@@ -132,7 +133,7 @@ function createTask(i: number): Task {
       _id: col._id,
       label: col.label,
       width: col.width,
-      value: valueFor(col._id, i),
+      value: valueFor(col.key ?? col._id, i),
     })),
   }
 }

@@ -70,8 +70,8 @@
       class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm ring-1 ring-black/5"
     >
       <VirtualBiTable
-        v-model:table-header-items="visibleColumns"
-        v-model:table-body-items="rows"
+        v-model:cols="visibleColumns"
+        v-model:rows="rows"
         :body-height="560"
         :loading="loading"
         selectable
@@ -84,7 +84,30 @@
         @sort="toggleSort"
         @toggle-row="toggleRow"
         @toggle-all="toggleAll"
-      />
+      >
+        <!-- Custom header for the Status column (slot name = column `key`). -->
+        <template #col-header-status="{ column, sorted, dir, toggleSort: sort }">
+          <button
+            type="button"
+            class="flex grow items-center gap-1.5 text-left text-xs font-semibold uppercase tracking-wider text-indigo-600 select-none hover:text-indigo-700"
+            @click="sort"
+          >
+            <span>⚑</span>
+            <span class="truncate">{{ column.label }}</span>
+            <span v-if="sorted">{{ dir === 'asc' ? '↑' : '↓' }}</span>
+          </button>
+        </template>
+
+        <!-- Custom body cell for the Status column. -->
+        <template #col-cell-status="{ value }">
+          <span
+            class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
+            :class="statusClass(value)"
+          >
+            {{ value }}
+          </span>
+        </template>
+      </VirtualBiTable>
     </div>
 
     <p class="mt-3 text-center text-xs text-slate-400">
@@ -123,6 +146,20 @@ const {
 } = useTable(fields, tasks)
 
 const loading = ref(false)
+
+// Maps a Status value to pill colors — used by the #col-cell-status example slot.
+function statusClass(value: string) {
+  switch (value) {
+    case 'Done':
+      return 'bg-emerald-100 text-emerald-700'
+    case 'In progress':
+      return 'bg-amber-100 text-amber-700'
+    case 'In review':
+      return 'bg-sky-100 text-sky-700'
+    default: // "To do"
+      return 'bg-slate-100 text-slate-600'
+  }
+}
 
 // Close the columns dropdown when clicking outside of it.
 const columnsMenu = ref<HTMLDetailsElement | null>(null)

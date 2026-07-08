@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
 import TableRow from '../TableRow.vue'
 
-const tableHeaderItems = [
+const cols = [
   { _id: 'title', label: 'Title', width: 100, sticky: true },
   { _id: 'age', label: 'Age', width: 80 },
 ]
@@ -18,7 +18,7 @@ const row = {
 describe('TableRow', () => {
   it('renders each visible cell value', () => {
     const wrapper = mount(TableRow, {
-      props: { row, tableHeaderItems, shouldShowCell: () => true },
+      props: { row, cols, shouldShowCell: () => true },
     })
     expect(wrapper.text()).toContain('Banana')
     expect(wrapper.text()).toContain('30')
@@ -28,7 +28,7 @@ describe('TableRow', () => {
     const wrapper = mount(TableRow, {
       props: {
         row,
-        tableHeaderItems,
+        cols,
         // only render the first column
         shouldShowCell: (_h: any, i: number) => i === 0,
       },
@@ -39,7 +39,7 @@ describe('TableRow', () => {
 
   it('renders a checkbox and emits toggle when selectable', async () => {
     const wrapper = mount(TableRow, {
-      props: { row, tableHeaderItems, shouldShowCell: () => true, selectable: true },
+      props: { row, cols, shouldShowCell: () => true, selectable: true },
     })
     const checkbox = wrapper.find('input[type="checkbox"]')
     expect(checkbox.exists()).toBe(true)
