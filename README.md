@@ -164,6 +164,53 @@ demo to GitHub Pages via [GitHub Actions](.github/workflows/deploy.yml).
 
 ---
 
+## 🧱 Data model
+
+Two shapes drive the table — **columns** (`Field[]`, bound to `v-model:cols`) and
+**rows** (`Task[]`, bound to `v-model:rows`).
+
+```ts
+interface Field {
+  _id: string          // unique column id; a row's cell matches a column by this
+  key?: string         // friendly slot id (#col-cell-<key>); use when _id is opaque, falls back to _id
+  label: string        // header text
+  width?: number       // column width in px
+  value: any           // the cell value (on row cells; columns carry a placeholder)
+  sticky?: boolean     // pin the column (the first column is always sticky)
+  draggable?: boolean  // set false to lock this column's position
+}
+
+interface Task {
+  _id: string          // unique row id
+  field: Field[]       // one entry per cell — its `_id` matches the column's `_id`
+}
+```
+
+**Columns and cells are matched by `_id`.** A row renders a column by finding the
+`field` entry whose `_id` equals the column's `_id`, then showing its `value`:
+
+```ts
+const cols: Field[] = [
+  { _id: "title",      label: "Title",  width: 300, sticky: true, value: "" },
+  { _id: "col_8f21a9", key: "status", label: "Status", width: 150, value: "" },
+]
+
+const rows: Task[] = [
+  {
+    _id: "task_1",
+    field: [
+      { _id: "title",      label: "Title",  value: "Design dashboard" },
+      { _id: "col_8f21a9", label: "Status", value: "In progress" },
+    ],
+  },
+]
+```
+
+Here the Status column's `_id` is opaque, so it sets `key: "status"` — you then
+target its slots as `#col-header-status` / `#col-cell-status`.
+
+---
+
 ## 🔌 Usage
 
 Minimal — just columns and rows:
@@ -178,10 +225,7 @@ generate();
 </script>
 
 <template>
-  <VirtualBiTable
-    v-model:table-header-items="fields"
-    v-model:table-body-items="tasks"
-  />
+  <VirtualBiTable v-model:cols="fields" v-model:rows="tasks" />
 </template>
 ```
 
@@ -206,8 +250,8 @@ const {
 <template>
   <input v-model="search" placeholder="Search…" />
   <VirtualBiTable
-    v-model:table-header-items="visibleColumns"
-    :table-body-items="rows"
+    v-model:cols="visibleColumns"
+    v-model:rows="rows"
     selectable
     :sort-key="sortKey"
     :sort-dir="sortDir"
@@ -225,8 +269,8 @@ const {
 
 | Prop | Type | Default | Description |
 |---|---|---|---|
-| `tableHeaderItems` (`v-model`) | `Field[]` | `[]` | Column definitions (label, width, `sticky`, `draggable`). Two-way for reorder/resize. |
-| `tableBodyItems` (`v-model`) | `Task[]` | `[]` | The rows to render. |
+| `cols` (`v-model`) | `Field[]` | `[]` | Column definitions (label, width, `sticky`, `draggable`). Two-way for reorder/resize. |
+| `rows` (`v-model`) | `Task[]` | `[]` | The rows to render. |
 | `bodyHeight` | `number` | `300` | Height of the scroll viewport (px). |
 | `itemHeight` | `number` | `44` | Row height, used by the virtualizer (px). |
 | `virtualScan` | `number` | `50` | Overscan — extra rows rendered outside the viewport. |
@@ -245,8 +289,36 @@ const {
 
 ### Slots
 
-- `#item="{ row, index }"` — override an entire row (`row` is the virtualized wrapper; your `Task` is `row.data`).
-- `#cell="{ header, index, row }"` — override how a single cell renders (badges, avatars, …). The component ships **no** hard-coded cell styling, so all visual design lives here in the consumer.
+Every header and body cell is customizable. Target **one** column by its `key`
+(falls back to `_id`), or **all** columns via the fallback slot:
+
+| Slot | Scope | Renders |
+|---|---|---|
+| `#col-header` | `{ column, index, sorted, dir, toggleSort }` | every header |
+| `#col-header-<key>` | same | one column's header (e.g. `#col-header-status`) |
+| `#col-cell` | `{ column, value, row, rowIndex, index }` | every body cell |
+| `#col-cell-<key>` | same | one column's body cell (e.g. `#col-cell-status`) |
+
+Resolution is **per-column → fallback → built-in default**. The checkbox, resize
+grip and drag handle stay *outside* the slot, so a custom header keeps sorting
+(call `toggleSort`), resizing and dragging. `value` is pre-resolved, so you never
+touch the internal row shape.
+
+```vue
+<VirtualBiTable v-model:cols="cols" v-model:rows="rows">
+  <!-- one column's header -->
+  <template #col-header-status="{ column, sorted, dir, toggleSort }">
+    <button @click="toggleSort">
+      {{ column.label }} <span v-if="sorted">{{ dir === "asc" ? "↑" : "↓" }}</span>
+    </button>
+  </template>
+
+  <!-- one column's body cell -->
+  <template #col-cell-status="{ value }">
+    <StatusPill :value="value" />
+  </template>
+</VirtualBiTable>
+```
 
 ---
 
