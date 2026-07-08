@@ -130,13 +130,31 @@ src/
 
 ---
 
-## 📦 Getting started
+## 📦 Installation
+
+```bash
+npm install vue-virtual-bi-table
+```
+
+`vue` (^3.5) is a peer dependency. Import the component and the stylesheet once:
+
+```ts
+import { VirtualBiTable } from "vue-virtual-bi-table";
+import "vue-virtual-bi-table/style.css";
+```
+
+The stylesheet ships only the classes the component uses — **no global CSS reset** —
+so it won't touch the rest of your app.
+
+---
+
+## 🧑‍💻 Local development
 
 ```bash
 # install
 npm install
 
-# run the dev server
+# run the demo dev server
 npm run dev
 
 # type-check + production build
@@ -217,15 +235,28 @@ Minimal — just columns and rows:
 
 ```vue
 <script setup lang="ts">
-import VirtualBiTable from "@/components/VirtualBiTable.vue";
-import { useMockData } from "@/composables/useMockData";
+import { ref } from "vue";
+import { VirtualBiTable, type Field, type Task } from "vue-virtual-bi-table";
+import "vue-virtual-bi-table/style.css";
 
-const { fields, tasks, generate } = useMockData(1000);
-generate();
+const cols = ref<Field[]>([
+  { _id: "title", label: "Title", width: 300, sticky: true, value: "" },
+  { _id: "status", label: "Status", width: 150, value: "" },
+]);
+
+const rows = ref<Task[]>([
+  {
+    _id: "1",
+    field: [
+      { _id: "title", label: "Title", value: "Design dashboard" },
+      { _id: "status", label: "Status", value: "In progress" },
+    ],
+  },
+]);
 </script>
 
 <template>
-  <VirtualBiTable v-model:cols="fields" v-model:rows="tasks" />
+  <VirtualBiTable v-model:cols="cols" v-model:rows="rows" />
 </template>
 ```
 
@@ -234,11 +265,17 @@ visibility, and the table renders the UI for them:
 
 ```vue
 <script setup lang="ts">
-import { useMockData } from "@/composables/useMockData";
-import { useTable } from "@/composables/useTable";
+import { ref } from "vue";
+import {
+  VirtualBiTable,
+  useTable,
+  type Field,
+  type Task,
+} from "vue-virtual-bi-table";
+import "vue-virtual-bi-table/style.css";
 
-const { fields, tasks, generate } = useMockData(1000);
-generate();
+const fields = ref<Field[]>(/* your columns */);
+const tasks = ref<Task[]>(/* your rows */);
 
 const {
   search, sortKey, sortDir, toggleSort,
