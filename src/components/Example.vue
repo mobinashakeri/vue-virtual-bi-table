@@ -38,7 +38,7 @@
             ⚙️ Columns
           </summary>
           <div
-            class="absolute right-0 z-40 mt-2 max-h-72 w-56 overflow-auto rounded-lg border border-slate-200 bg-white p-1 shadow-lg"
+            class="absolute left-0 md:left-auto md:right-0 z-40 mt-2 max-h-72 w-56 max-w-[calc(100vw-2rem)] overflow-auto rounded-lg border border-slate-200 bg-white p-1 shadow-lg"
           >
             <label
               v-for="f in fields"
@@ -56,13 +56,6 @@
             </label>
           </div>
         </details>
-
-        <button
-          class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 shadow-sm hover:bg-slate-50"
-          @click="reload"
-        >
-          ↻ Reload
-        </button>
       </div>
     </div>
 
@@ -73,8 +66,8 @@
         v-model:cols="visibleColumns"
         v-model:rows="rows"
         :body-height="560"
-        :loading="loading"
         selectable
+        :sortable="true"
         :item-draggable="isSourceOrder"
         :sort-key="sortKey"
         :sort-dir="sortDir"
@@ -145,8 +138,6 @@ const {
   clearSelection,
 } = useTable(fields, tasks)
 
-const loading = ref(false)
-
 // Maps a Status value to pill colors — used by the #col-cell-status example slot.
 function statusClass(value: string) {
   switch (value) {
@@ -166,13 +157,4 @@ const columnsMenu = ref<HTMLDetailsElement | null>(null)
 onClickOutside(columnsMenu, () => {
   if (columnsMenu.value) columnsMenu.value.open = false
 })
-
-function reload() {
-  loading.value = true
-  clearSelection()
-  setTimeout(() => {
-    generate(1000)
-    loading.value = false
-  }, 800)
-}
 </script>

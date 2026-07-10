@@ -28,6 +28,11 @@ const COLUMNS: Omit<Field, 'value'>[] = [
   { _id: 'createdDate', label: 'Created', width: 150 },
   { _id: 'updatedDate', label: 'Updated', width: 150 },
   { _id: 'tags', label: 'Tags', width: 200 },
+  { _id: 'reviewer', label: 'Reviewer', width: 190 },
+  { _id: 'resolution', label: 'Resolution', width: 150 },
+  { _id: 'labels', label: 'Labels', width: 150 },
+  { _id: 'watchers', label: 'Watchers', width: 120 },
+  { _id: 'rank', label: 'Rank', width: 100 },
 ]
 
 /* -------------------------------------------------------------------------- */
@@ -61,6 +66,7 @@ const TEAMS = ['Platform', 'Growth', 'Payments', 'Mobile', 'Infra']
 const EPICS = ['Onboarding', 'Checkout', 'Search', 'Notifications', 'Reporting']
 const COMPONENTS = ['Auth', 'Billing', 'API', 'UI', 'Database']
 const ENVIRONMENTS = ['Development', 'Staging', 'Production']
+const RESOLUTIONS = ['Unresolved', 'Fixed', 'Duplicate', "Won't fix"]
 const POINTS = [1, 2, 3, 5, 8, 13]
 
 const pick = <T>(arr: T[], i: number): T => arr[i % arr.length]
@@ -117,6 +123,16 @@ function valueFor(columnId: string, i: number): any {
       return randomDate(-14, 0)
     case 'tags':
       return [rand(TAGS), rand(TAGS)]
+    case 'reviewer':
+      return rand(ASSIGNEES)
+    case 'resolution':
+      return rand(RESOLUTIONS)
+    case 'labels':
+      return rand(TAGS)
+    case 'watchers':
+      return Math.floor(Math.random() * 10)
+    case 'rank':
+      return i + 1
     default:
       return ''
   }

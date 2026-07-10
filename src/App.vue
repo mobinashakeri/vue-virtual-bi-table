@@ -10,21 +10,21 @@
           </span>
           <div>
             <h1 class="text-2xl font-bold tracking-tight text-slate-900">
-              Vue Virtual Table
+              Vue Virtual Bi Table
             </h1>
             <p class="text-sm text-slate-500">
-              Two-axis virtualization that scales to tens of thousands of rows
-              and hundreds of columns.
+              Two-axis virtualization — smooth across tens of thousands of rows
+              and a couple dozen columns.
             </p>
           </div>
         </div>
       </header>
 
-      <TaskTable />
+      <Example />
     </div>
   </main>
 </template>
 
 <script setup lang="ts">
-import TaskTable from './components/TaskTable.vue'
+import Example from './components/Example.vue'
 </script>

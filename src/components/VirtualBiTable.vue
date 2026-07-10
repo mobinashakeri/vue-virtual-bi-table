@@ -72,7 +72,7 @@
                   v-bind="headerScope(header, headerIndex)"
                 />
                 <button
-                  v-else
+                  v-else-if="sortable"
                   type="button"
                   class="vbt-header-btn flex grow items-center gap-1 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 select-none hover:text-slate-700"
                   @click="emit('sort', header._id)"
@@ -82,6 +82,12 @@
                     {{ sortDir === 'asc' ? '↑' : '↓' }}
                   </span>
                 </button>
+                <span
+                  v-else
+                  class="grow truncate text-left text-xs font-semibold uppercase tracking-wider text-slate-500 select-none"
+                >
+                  {{ header.label }}
+                </span>
               </div>
             </Resizable>
           </template>
@@ -195,7 +201,7 @@ interface HeaderItem {
 }
 
 interface Props {
-  virtualScan?: number
+  overscan?: number
   bodyHeight?: number
   itemHeight?: number
   fixedHeader?: boolean
@@ -224,7 +230,7 @@ const tableBody = computed<HTMLDivElement | null>(
 )
 
 const props = withDefaults(defineProps<Props>(), {
-  virtualScan: 50,
+  overscan: 50,
   bodyHeight: 300,
   itemHeight: 44,
   fixedHeader: true,
@@ -244,7 +250,10 @@ const emit = defineEmits<{
   (e: 'change', data: any): void
   (e: 'headerMoved', data: any): void
   (e: 'resizeStart'): void
-  (e: 'moveRow', data: any): void
+  (
+    e: 'moveRow',
+    data: { row: Task; oldIndex: number; newIndex: number; rows: Task[] },
+  ): void
   (e: 'sort', id: string): void
   (e: 'toggleRow', id: string): void
   (e: 'toggleAll'): void
@@ -255,6 +264,7 @@ interface HeaderSlotScope {
   index: number
   sorted: boolean
   dir: 'asc' | 'desc'
+  sortable: boolean
   toggleSort: () => void
 }
 
@@ -290,7 +300,10 @@ const headerScope = (column: Field, index: number): HeaderSlotScope => ({
   index,
   sorted: props.sortKey === column._id,
   dir: props.sortDir,
-  toggleSort: () => emit('sort', column._id),
+  sortable: props.sortable,
+  toggleSort: () => {
+    if (props.sortable) emit('sort', column._id)
+  },
 })
 
 const cellSlotNames = computed(
@@ -309,7 +322,7 @@ const reactiveItems = computed(() => rows.value || [])
 
 const { list, containerProps, wrapperProps } = useVirtualList(reactiveItems, {
   itemHeight: props.itemHeight,
-  overscan: props.virtualScan,
+  overscan: props.overscan,
 })
 
 // `list` is a readonly computed; vuedraggable needs a mutable array to splice.
@@ -390,8 +403,6 @@ const shouldShowCell = (headerItem: HeaderItem, headerIndex: number) => {
 const onHeaderMove = ({ draggedContext }: any) => {
   const { index, futureIndex } = draggedContext
 
-  if (!props.sortable) return false
-
   // Prevent moving the title column, or moving anything into first position
   if (index === 0 || futureIndex === 0) return false
 
@@ -433,7 +444,7 @@ const onBodyChange = (evt: any) => {
 
   items.splice(to, 0, row)
   rows.value = items
-  emit('moveRow', evt.moved)
+  emit('moveRow', { row, oldIndex: from, newIndex: to, rows: items })
 }
 
 const setupHeaderObservers = () => {

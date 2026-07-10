@@ -1,12 +1,12 @@
 <div align="center">
 
-# 🗂️ Vue Virtual Table
+# 🗂️ Vue Virtual bi Table
 
 **A high-performance, two-dimensional virtualized data table for Vue 3.**
 
-Efficiently render **tens of thousands of rows and hundreds of columns** with row
-virtualization, horizontal column lazy-loading, drag-to-reorder, and live column resizing —
-all without dropping a frame.
+Smoothly render **50,000 rows** with row virtualization, horizontal column lazy-loading,
+drag-to-reorder, and live column resizing — comfortable up to **~25 columns** (more with
+lightweight cells). See [Performance &amp; sizing](#-performance--sizing).
 
 <br />
 
@@ -29,22 +29,23 @@ all without dropping a frame.
 Most table components virtualize **rows** only. Once a table gets *wide* — 20, 40, 100+
 columns — every visible row still renders every cell, and the browser grinds to a halt.
 
-**Vue Virtual Table solves both axes at once:**
+**Vue Virtual Bi Table solves both axes at once:**
 
 - **Vertical virtualization** → only the rows in the viewport are mounted.
 - **Horizontal lazy-loading** → within each rendered row, only the cells whose columns are
   on-screen (or about to be) render their content.
 
-The result is a table that stays smooth as it scales to **tens of thousands of rows and
-hundreds of columns** — while still supporting rich interactions like drag-to-reorder and
-resizing. (The included demo generates 1,000 rows × 20 columns, but nothing in the design
-caps it there.)
+The result stays smooth across **tens of thousands of rows** and a couple dozen columns —
+while still supporting rich interactions like drag-to-reorder and resizing. The vertical axis
+scales freely (50,000 rows is comfortable); the horizontal axis is the one to size for — see
+[Performance &amp; sizing](#-performance--sizing) for concrete limits. (The demo runs 1,000
+rows × 25 columns.)
 
 <br />
 
 <div align="center">
 
-![Vue Virtual Table demo — vertical row scrolling, horizontal column virtualization, drag-to-reorder and column resize](docs/demo.gif)
+![Vue Virtual Bi Table demo — vertical row scrolling, horizontal column virtualization, drag-to-reorder and column resize](docs/demo.gif)
 
 _1,000 rows × 20 columns — vertical + horizontal virtualization, drag-to-reorder, and live resize._
 
@@ -64,9 +65,9 @@ _1,000 rows × 20 columns — vertical + horizontal virtualization, drag-to-reor
 | 📌 | **Sticky header & first column** | Header and the title column stay pinned while scrolling. |
 | 🔄 | **Synced scroll** | Header and body scroll horizontally in lockstep. |
 | ↕️ | **Sorting** | Click a header to cycle asc → desc → none, with an active-column indicator. |
-| 🔍 | **Global search & filter** | Instantly filter across every column — stays smooth over the full dataset. |
+| 🔍 | **Global search & filter** | `useTable` filters across every column, smooth over the full dataset (you render the search input). |
 | ☑️ | **Row selection** | Per-row checkboxes plus a select-all with indeterminate state. |
-| 👁️ | **Column show / hide** | Toggle column visibility from a dropdown (click-outside to close). |
+| 👁️ | **Column show / hide** | `useTable` tracks hidden columns (you render the toggle UI). |
 | 💀 | **Loading skeleton** | Shimmer placeholder rows while data loads. |
 | 🧩 | **Slot-driven cells** | Fully customizable header and cell rendering via scoped slots. |
 | 🛟 | **Type-safe** | Written in strict TypeScript end-to-end. |
@@ -79,7 +80,7 @@ The component is a **bi-dimensional virtualizer** (hence `VirtualBiTable`):
 
 ```mermaid
 flowchart TD
-    A[1,000 rows × 20 columns<br/>= 20,000 potential cells] --> B{Vertical<br/>virtualization}
+    A[1,000 rows × 25 columns<br/>= 25,000 potential cells] --> B{Vertical<br/>virtualization}
     B -->|useVirtualList| C[~58 rows mounted<br/>visible + overscan]
     C --> D{Horizontal<br/>lazy-loading}
     D -->|IntersectionObserver<br/>per column| E[Only on-screen columns<br/>render cell content]
@@ -98,14 +99,53 @@ sized placeholder instead of their real content — preserving layout while skip
 
 ---
 
+## ⚡ Performance & sizing
+
+The two axes scale very differently — size your table accordingly.
+
+**Rows scale freely.** Only the rows in the viewport (plus a small overscan) are ever
+mounted, so scrolling cost is fixed by what's *visible*, not by the total. **50,000 rows
+stay smooth.** At that scale the practical ceiling is memory — each row holds one cell per
+column — not rendering.
+
+**Columns are the axis to watch.** Every mounted row renders one cell per column, so per-row
+work grows with the column count. With typical cells (text, badges, small components):
+
+| Columns | Scrolling |
+|---|---|
+| ≤ 15 | effortless (~60 fps) |
+| **~25** | **smooth for everyday use — the recommended ceiling** |
+| 40–50 | usable, but choppy on fast scrolling |
+| 100+ | janky |
+
+### Rules of thumb
+
+- **50,000 rows × ~25 columns** is the comfortable sweet spot — smooth in normal use.
+- You can go **beyond 25 columns when your cells are lightweight** (plain text or small badges).
+- A **heavy component in every cell** (charts, editors, rich widgets) lowers the ceiling —
+  keep it **at or below ~25 columns**. Prefer rendering heavy cells only in the columns that
+  need them, via `#col-cell-<key>`, and leaving the rest as light text.
+
+### If you need more headroom
+
+- **Hide columns you don't need** — only rendered columns cost anything, so column show/hide
+  is a genuine performance lever.
+- Keep per-cell components **cheap to mount** (defer expensive work; avoid per-cell async).
+- Lower `overscan` to trim memory and mount cost.
+
+> Figures measured in Chrome with 50,000 rows; exact numbers vary with hardware, column
+> widths, and cell complexity.
+
+---
+
 ## 🏗️ Architecture
 
 ```
 src/
 ├── components/
 │   ├── VirtualBiTable.vue   # Orchestrator: virtualization, observers, scroll sync, DnD
-│   ├── TaskTable.vue        # Demo host: toolbar (search, columns, selection, reload)
-│   │                        #   + useTable / useMockData wiring around VirtualBiTable
+│   ├── Example.vue          # Demo/example only (NOT published): a toolbar (search,
+│   │                        #   columns, selection) wiring useTable around VirtualBiTable
 │   ├── TableRow.vue         # A single row — renders visible cells via shouldShowCell()
 │   └── Resizable.vue        # Reusable resize wrapper (drag handles + width/height clamps)
 ├── composables/
@@ -114,7 +154,7 @@ src/
 ├── types/
 │   ├── field.interface.ts   # Column definition (label, width, sticky, draggable…)
 │   └── task.interface.ts    # Row definition (id + field values)
-└── App.vue                  # Page shell (title header) that renders <TaskTable />
+└── App.vue                  # Page shell (title header) that renders <Example />
 ```
 
 ---
@@ -260,8 +300,10 @@ const rows = ref<Task[]>([
 </template>
 ```
 
-Full-featured — the `useTable` composable adds search, sort, selection and column
-visibility, and the table renders the UI for them:
+Full-featured — the `useTable` composable **manages** search, sort, selection and
+column-visibility *state*. You render your own controls (search box, column toggle)
+and feed the state into the table. The table stays chrome-free on purpose, so your
+toolbar matches your app:
 
 ```vue
 <script setup lang="ts">
@@ -285,7 +327,9 @@ const {
 </script>
 
 <template>
-  <input v-model="search" placeholder="Search…" />
+  <!-- Your own toolbar goes here — e.g. <input v-model="search"> and a
+       column-toggle menu — wired to the values from useTable above.
+       (See Example.vue in the repo for a full toolbar.) -->
   <VirtualBiTable
     v-model:cols="visibleColumns"
     v-model:rows="rows"
@@ -310,12 +354,12 @@ const {
 | `rows` (`v-model`) | `Task[]` | `[]` | The rows to render. |
 | `bodyHeight` | `number` | `300` | Height of the scroll viewport (px). |
 | `itemHeight` | `number` | `44` | Row height, used by the virtualizer (px). |
-| `virtualScan` | `number` | `50` | Overscan — extra rows rendered outside the viewport. |
+| `overscan` | `number` | `50` | Extra rows rendered above & below the viewport. Higher = fewer blank flashes on fast scroll but more memory/mount cost; lower = leaner. |
 | `fixedHeader` | `boolean` | `true` | Keep the header row sticky. |
-| `sortable` | `boolean` | `true` | Allow column drag-to-reorder. |
-| `itemDraggable` | `boolean` | `false` | Allow row drag-to-move. |
+| `sortable` | `boolean` | `true` | Enable click-to-sort on headers. When `false`, headers are static labels. (Column drag-reorder is separate — lock a column with `draggable: false` on its `Field`.) |
+| `itemDraggable` | `boolean` | `false` | Enable **row** drag-to-reorder. Pair with `v-model:rows` (auto-applies the new order) or listen to `@move-row`. |
 | `loading` | `boolean` | `false` | Show the skeleton placeholder. |
-| `selectable` | `boolean` | `false` | Render selection checkboxes. |
+| `selectable` | `boolean` | `false` | Render row + select-all checkboxes. |
 | `sortKey` / `sortDir` | `string` / `"asc"｜"desc"` | — | Active sort column & direction (for the indicator). |
 | `selectedIds` | `Set<string>` | — | Currently-selected row ids. |
 | `allSelected` / `someSelected` | `boolean` | `false` | Select-all checkbox state (incl. indeterminate). |
@@ -323,6 +367,16 @@ const {
 ### Emits
 
 `sort` · `toggleRow` · `toggleAll` · `change` · `headerMoved` · `resizeStart` · `moveRow`
+
+**Reordering rows** — set `item-draggable`, then drag a row. On drop the table emits:
+
+```ts
+@move-row="(e: { row: Task; oldIndex: number; newIndex: number; rows: Task[] }) => { … }"
+```
+
+`rows` is the already-reordered array. If you `v-model:rows`, the new order is applied for
+you; otherwise apply `e.rows` yourself. (Row drag is best when the list isn't sorted/filtered —
+`useTable` exposes `isSourceOrder` for exactly this gate.)
 
 ### Slots
 
