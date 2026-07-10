@@ -24,8 +24,7 @@
           }"
           :item-key="(key: HeaderItem) => key['_id']"
           :move="onHeaderMove"
-          @moved="tableHeaderMoved"
-          @change="change"
+          @change="onHeaderChange"
         >
           <template #item="{ element: header, index: headerIndex }">
             <Resizable
@@ -188,8 +187,8 @@ import draggable from 'vuedraggable'
 import { useVirtualList, useIntersectionObserver } from '@vueuse/core'
 import Resizable from './Resizable.vue'
 import TableRow from './TableRow.vue'
-import type { Field } from '../types/field.interface'
-import type { Task } from '../types/task.interface'
+import type { Col } from '../types/col.interface'
+import type { Row } from '../types/row.interface'
 
 interface HeaderItem {
   _id: string
@@ -247,12 +246,14 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const emit = defineEmits<{
-  (e: 'change', data: any): void
-  (e: 'headerMoved', data: any): void
   (e: 'resizeStart'): void
   (
     e: 'moveRow',
-    data: { row: Task; oldIndex: number; newIndex: number; rows: Task[] },
+    data: { row: Row; oldIndex: number; newIndex: number; rows: Row[] },
+  ): void
+  (
+    e: 'moveColumn',
+    data: { column: Col; oldIndex: number; newIndex: number; cols: Col[] },
   ): void
   (e: 'sort', id: string): void
   (e: 'toggleRow', id: string): void
@@ -260,7 +261,7 @@ const emit = defineEmits<{
 }>()
 
 interface HeaderSlotScope {
-  column: Field
+  column: Col
   index: number
   sorted: boolean
   dir: 'asc' | 'desc'
@@ -269,7 +270,7 @@ interface HeaderSlotScope {
 }
 
 interface CellSlotScope {
-  column: Field
+  column: Col
   index: number
   row: any
   rowIndex: number | undefined
@@ -288,14 +289,14 @@ const slots = defineSlots<{
 }>()
 
 const hasSlot = (name: string) => name in slots
-const columnKey = (column: Field) => column.key ?? column._id
+const columnKey = (column: Col) => column.key ?? column._id
 
 // Template-literal-typed so it matches the typed slot keys (a plain `string`
 // can't index the typed slots).
-const colHeaderSlot = (column: Field) =>
+const colHeaderSlot = (column: Col) =>
   `col-header-${columnKey(column)}` as const
 
-const headerScope = (column: Field, index: number): HeaderSlotScope => ({
+const headerScope = (column: Col, index: number): HeaderSlotScope => ({
   column,
   index,
   sorted: props.sortKey === column._id,
@@ -313,8 +314,8 @@ const cellSlotNames = computed(
     ) as Array<'col-cell' | `col-cell-${string}`>,
 )
 
-const cols = defineModel<Field[]>('cols', { default: () => [] })
-const rows = defineModel<Task[]>('rows', { default: () => [] })
+const cols = defineModel<Col[]>('cols', { default: () => [] })
+const rows = defineModel<Row[]>('rows', { default: () => [] })
 
 const headerDrag = ref<boolean>(false)
 
@@ -326,7 +327,7 @@ const { list, containerProps, wrapperProps } = useVirtualList(reactiveItems, {
 })
 
 // `list` is a readonly computed; vuedraggable needs a mutable array to splice.
-const draggableRows = ref<Array<{ index: number; data: Task }>>([])
+const draggableRows = ref<Array<{ index: number; data: Row }>>([])
 watch(list, (v) => (draggableRows.value = (v ?? []).slice()), {
   immediate: true,
 })
@@ -412,7 +413,20 @@ const onHeaderMove = ({ draggedContext }: any) => {
   )
 }
 
-const change = (data: any) => emit('change', data)
+// Column reorder: emit a clean payload and re-arm the column observers.
+const onHeaderChange = (evt: any) => {
+  if (!evt?.moved) return
+  emit('moveColumn', {
+    column: evt.moved.element,
+    oldIndex: evt.moved.oldIndex,
+    newIndex: evt.moved.newIndex,
+    cols: cols.value,
+  })
+  nextTick(() => {
+    cols.value.forEach((header) => (visibilityMap[header._id] = true))
+    setTimeout(() => setupHeaderObservers(), OBSERVER_SETUP_DELAY)
+  })
+}
 
 const checkCanMoveItem = ({ draggedContext }: any) => {
   if (!props.itemDraggable || draggedContext.element.data.root) return false
@@ -481,16 +495,6 @@ const setupHeaderObservers = () => {
         observerInstances.set(elementId, { stop })
       }, index * 10)
     })
-  })
-}
-
-const tableHeaderMoved = (data: any) => {
-  emit('headerMoved', data)
-  nextTick(() => {
-    cols.value.forEach((header) => {
-      visibilityMap[header._id] = true
-    })
-    setTimeout(() => setupHeaderObservers(), OBSERVER_SETUP_DELAY)
   })
 }
 
