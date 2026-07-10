@@ -1,6 +1,5 @@
 <template>
   <div>
-    <!-- Toolbar -->
     <div class="mb-3 flex flex-wrap items-center gap-3">
       <div class="relative grow sm:max-w-xs">
         <span
@@ -30,7 +29,6 @@
       </div>
 
       <div class="mx-auto md:ml-auto md:mr-0 w-full md:w-auto flex items-center gap-2">
-        <!-- Column show/hide -->
         <details ref="columnsMenu" class="relative">
           <summary
             class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 shadow-sm hover:bg-slate-50"
@@ -78,27 +76,27 @@
         @toggle-row="toggleRow"
         @toggle-all="toggleAll"
       >
-        <!-- Custom header for the Status column (slot name = column `key`). -->
-        <template #col-header-status="{ column, sorted, dir, toggleSort: sort }">
-          <button
-            type="button"
-            class="flex grow items-center gap-1.5 text-left text-xs font-semibold uppercase tracking-wider text-indigo-600 select-none hover:text-indigo-700"
-            @click="sort"
-          >
-            <span>⚑</span>
-            <span class="truncate">{{ column.label }}</span>
-            <span v-if="sorted">{{ dir === 'asc' ? '↑' : '↓' }}</span>
-          </button>
+        <template
+          #col-header="{ column, index, sorted, dir, sortable, toggleSort: onSort }"
+        >
+          <TableHeaderCell
+            :column="column"
+            :index="index"
+            :sorted="sorted"
+            :dir="dir"
+            :sortable="sortable"
+            :toggle-sort="onSort"
+          />
         </template>
 
-        <!-- Custom body cell for the Status column. -->
-        <template #col-cell-status="{ value }">
-          <span
-            class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
-            :class="statusClass(value)"
-          >
-            {{ value }}
-          </span>
+        <template #col-cell="{ column, value, row, index, rowIndex }">
+          <TableBodyCell
+            :column="column"
+            :value="value"
+            :row="row"
+            :index="index"
+            :row-index="rowIndex"
+          />
         </template>
       </VirtualBiTable>
     </div>
@@ -114,6 +112,8 @@
 import { ref } from 'vue'
 import { onClickOutside } from '@vueuse/core'
 import VirtualBiTable from './VirtualBiTable.vue'
+import TableHeaderCell from './TableHeaderCell.vue'
+import TableBodyCell from './TableBodyCell.vue'
 import { useMockData } from '../composables/useMockData.ts'
 import { useTable } from '../composables/useTable.ts'
 
@@ -138,21 +138,6 @@ const {
   clearSelection,
 } = useTable(fields, tasks)
 
-// Maps a Status value to pill colors — used by the #col-cell-status example slot.
-function statusClass(value: string) {
-  switch (value) {
-    case 'Done':
-      return 'bg-emerald-100 text-emerald-700'
-    case 'In progress':
-      return 'bg-amber-100 text-amber-700'
-    case 'In review':
-      return 'bg-sky-100 text-sky-700'
-    default: // "To do"
-      return 'bg-slate-100 text-slate-600'
-  }
-}
-
-// Close the columns dropdown when clicking outside of it.
 const columnsMenu = ref<HTMLDetailsElement | null>(null)
 onClickOutside(columnsMenu, () => {
   if (columnsMenu.value) columnsMenu.value.open = false
