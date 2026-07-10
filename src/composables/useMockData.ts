@@ -6,7 +6,7 @@ import type { Col } from '../types/col.interface'
 /*  Column definitions — single source of truth for label + width             */
 /* -------------------------------------------------------------------------- */
 
-const COLUMNS: Omit<Col, 'value'>[] = [
+const COLUMNS: Col[] = [
   { _id: 'title', label: 'Title', width: 300, sticky: true },
   // Opaque _id + friendly `key`: slots target the `key` (#col-cell-status), not _id.
   { _id: 'col_8f21a9', key: 'status', label: 'Status', width: 150 },

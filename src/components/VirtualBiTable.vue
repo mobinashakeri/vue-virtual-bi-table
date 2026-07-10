@@ -22,7 +22,7 @@
             type: 'transition-group',
             name: !headerDrag ? 'flip-list' : null,
           }"
-          :item-key="(key: HeaderItem) => key['_id']"
+          :item-key="(key: Col) => key['_id']"
           :move="onHeaderMove"
           @change="onHeaderChange"
         >
@@ -189,15 +189,6 @@ import Resizable from './Resizable.vue'
 import TableRow from './TableRow.vue'
 import type { Col } from '../types/col.interface'
 import type { Row } from '../types/row.interface'
-
-interface HeaderItem {
-  _id: string
-  label?: string
-  value: string
-  width?: number
-  draggable?: boolean
-  sticky?: boolean
-}
 
 interface Props {
   overscan?: number
@@ -386,7 +377,7 @@ const visibleHeaders = computed(() =>
     .map(([header]) => header),
 )
 
-const shouldShowCell = (headerItem: HeaderItem, headerIndex: number) => {
+const shouldShowCell = (headerItem: Col, headerIndex: number) => {
   // Always show the title column
   if (headerIndex === 0 || headerItem.sticky) return true
 
