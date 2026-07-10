@@ -19,16 +19,18 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       # Enables GitHub Pages automatically (source: GitHub Actions) on first run.
       - uses: actions/configure-pages@v5
         with:
           enablement: true
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
-      - run: npm ci
+      # npm install (not ci) so the deploy reconciles the lockfile instead of
+      # hard-failing on a strict-mode version mismatch between npm releases.
+      - run: npm install --no-audit --no-fund
       - run: npm run test:run
       - run: npm run build
       - uses: actions/upload-pages-artifact@v3
