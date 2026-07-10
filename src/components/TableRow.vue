@@ -51,13 +51,13 @@
 </template>
 
 <script setup lang="ts">
-import type { Field } from '../types/field.interface'
+import type { Col } from '../types/col.interface'
 
 interface Props {
   row: any
   rowIndex?: number
-  cols: Field[]
-  shouldShowCell: (headerItem: Field, headerIndex: number) => boolean
+  cols: Col[]
+  shouldShowCell: (headerItem: Col, headerIndex: number) => boolean
   selectable?: boolean
   selected?: boolean
 }
@@ -66,11 +66,11 @@ const props = defineProps<Props>()
 const emit = defineEmits<{ (e: 'toggle'): void }>()
 
 const valueOf = (headerItem: any) =>
-  props.row.field.find((f: any) => f._id === headerItem._id)?.value
+  props.row.cells.find((f: any) => f._id === headerItem._id)?.value
 
-const columnKey = (column: Field) => column.key ?? column._id
+const columnKey = (column: Col) => column.key ?? column._id
 
-const cellScope = (column: Field, index: number) => ({
+const cellScope = (column: Col, index: number) => ({
   column,
   index,
   row: props.row,

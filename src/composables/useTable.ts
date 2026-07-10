@@ -1,6 +1,6 @@
 import { computed, ref, type Ref } from 'vue'
-import type { Field } from '../types/field.interface'
-import type { Task } from '../types/task.interface'
+import type { Col } from '../types/col.interface'
+import type { Row } from '../types/row.interface'
 
 export type SortDir = 'asc' | 'desc'
 
@@ -9,20 +9,20 @@ export type SortDir = 'asc' | 'desc'
  * and column visibility. Keeps the raw `fields`/`tasks` as the source of truth
  * and derives everything the table needs.
  */
-export function useTable(fields: Ref<Field[]>, tasks: Ref<Task[]>) {
+export function useTable(fields: Ref<Col[]>, tasks: Ref<Row[]>) {
   const search = ref('')
   const sortKey = ref<string | null>(null)
   const sortDir = ref<SortDir>('asc')
   const hiddenIds = ref<Set<string>>(new Set())
   const selected = ref<Set<string>>(new Set())
 
-  const valueOf = (task: Task, id: string) =>
-    task.field.find((f) => f._id === id)?.value
+  const valueOf = (task: Row, id: string) =>
+    task.cells.find((f) => f._id === id)?.value
 
   /* ------------------------------- Columns ------------------------------- */
 
   // Visible columns, writable so the table's reorder/resize flow back to `fields`.
-  const visibleColumns = computed<Field[]>({
+  const visibleColumns = computed<Col[]>({
     get: () => fields.value.filter((f) => !hiddenIds.value.has(f._id)),
     set: (nextVisible) => {
       const hidden = fields.value.filter((f) => hiddenIds.value.has(f._id))
@@ -59,13 +59,13 @@ export function useTable(fields: Ref<Field[]>, tasks: Ref<Task[]>) {
     () => !sortKey.value && search.value.trim() === '',
   )
 
-  const rows = computed<Task[]>({
+  const rows = computed<Row[]>({
     get: () => {
       const q = search.value.trim().toLowerCase()
 
       const result = q
         ? tasks.value.filter((t) =>
-            t.field.some((f) =>
+            t.cells.some((f) =>
               String(f.value ?? '')
                 .toLowerCase()
                 .includes(q),

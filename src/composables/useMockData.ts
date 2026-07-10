@@ -1,12 +1,12 @@
 import { ref, shallowRef } from 'vue'
-import type { Task } from '../types/task.interface'
-import type { Field } from '../types/field.interface'
+import type { Row } from '../types/row.interface'
+import type { Col } from '../types/col.interface'
 
 /* -------------------------------------------------------------------------- */
 /*  Column definitions — single source of truth for label + width             */
 /* -------------------------------------------------------------------------- */
 
-const COLUMNS: Omit<Field, 'value'>[] = [
+const COLUMNS: Omit<Col, 'value'>[] = [
   { _id: 'title', label: 'Title', width: 300, sticky: true },
   // Opaque _id + friendly `key`: slots target the `key` (#col-cell-status), not _id.
   { _id: 'col_8f21a9', key: 'status', label: 'Status', width: 150 },
@@ -142,10 +142,10 @@ function valueFor(columnId: string, i: number): any {
 /*  Create one task (same shape as your mock)                                 */
 /* -------------------------------------------------------------------------- */
 
-function createTask(i: number): Task {
+function createTask(i: number): Row {
   return {
     _id: `task_${i + 1}`,
-    field: COLUMNS.map((col) => ({
+    cells: COLUMNS.map((col) => ({
       _id: col._id,
       label: col.label,
       width: col.width,
@@ -160,18 +160,18 @@ function createTask(i: number): Task {
 
 export function useMockData(initialCount = 5) {
   const count = ref(initialCount) // bind this to an input
-  const tasks = shallowRef<Task[]>([]) // shallowRef keeps large lists fast
+  const tasks = shallowRef<Row[]>([]) // shallowRef keeps large lists fast
   const isGenerating = ref(false)
 
   // The columns for your table header (label + width, no value).
-  const fields = ref<Field[]>(COLUMNS.map((c) => ({ ...c, value: '' })))
+  const fields = ref<Col[]>(COLUMNS.map((c) => ({ ...c, value: '' })))
 
   /** Generate `n` tasks (defaults to current `count`). Handles 1000+ fine. */
-  function generate(n: number = count.value): Task[] {
+  function generate(n: number = count.value): Row[] {
     isGenerating.value = true
     count.value = n
 
-    const result = new Array<Task>(n)
+    const result = new Array<Row>(n)
     for (let i = 0; i < n; i++) result[i] = createTask(i)
 
     tasks.value = result
@@ -182,7 +182,7 @@ export function useMockData(initialCount = 5) {
   /** Append `n` more tasks to the existing list. */
   function addMore(n: number): void {
     const start = tasks.value.length
-    const extra = new Array<Task>(n)
+    const extra = new Array<Row>(n)
     for (let i = 0; i < n; i++) extra[i] = createTask(start + i)
     tasks.value = [...tasks.value, ...extra]
     count.value = tasks.value.length

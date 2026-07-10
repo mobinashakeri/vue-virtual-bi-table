@@ -1,41 +1,41 @@
 import { describe, it, expect } from 'vitest'
 import { ref } from 'vue'
 import { useTable } from '../useTable'
-import type { Field } from '@/types/field.interface'
-import type { Task } from '@/types/task.interface'
+import type { Col } from '@/types/col.interface'
+import type { Row } from '@/types/row.interface'
 
 const makeFields = () =>
-  ref<Field[]>([
+  ref<Col[]>([
     { _id: 'title', label: 'Title', width: 100, value: '', sticky: true },
     { _id: 'age', label: 'Age', width: 80, value: 0 },
   ])
 
 const makeTasks = () =>
-  ref<Task[]>([
+  ref<Row[]>([
     {
       _id: 't1',
-      field: [
+      cells: [
         { _id: 'title', label: 'Title', value: 'Banana' },
         { _id: 'age', label: 'Age', value: 30 },
       ],
     },
     {
       _id: 't2',
-      field: [
+      cells: [
         { _id: 'title', label: 'Title', value: 'apple' },
         { _id: 'age', label: 'Age', value: 10 },
       ],
     },
     {
       _id: 't3',
-      field: [
+      cells: [
         { _id: 'title', label: 'Title', value: 'Cherry' },
         { _id: 'age', label: 'Age', value: 20 },
       ],
     },
   ])
 
-const ids = (rows: Task[]) => rows.map((r) => r._id)
+const ids = (rows: Row[]) => rows.map((r) => r._id)
 
 describe('useTable — search', () => {
   it('filters across all columns, case-insensitively', () => {

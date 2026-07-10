@@ -9,7 +9,7 @@ const cols = [
 
 const row = {
   _id: 't1',
-  field: [
+  cells: [
     { _id: 'title', value: 'Banana' },
     { _id: 'age', value: 30 },
   ],
