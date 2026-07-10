@@ -74,7 +74,7 @@
                 <button
                   v-else
                   type="button"
-                  class="flex grow items-center gap-1 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 select-none hover:text-slate-700"
+                  class="vbt-header-btn flex grow items-center gap-1 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 select-none hover:text-slate-700"
                   @click="emit('sort', header._id)"
                 >
                   <span class="truncate">{{ header.label }}</span>

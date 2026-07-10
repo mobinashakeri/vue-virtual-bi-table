@@ -22,3 +22,25 @@
 .vbt-root *::after {
   box-sizing: border-box;
 }
+
+/*
+ * Scoped base — the package ships utilities without Tailwind's preflight, so
+ * without these the host browser's native <button>/<input> chrome (borders,
+ * backgrounds) and default serif font would leak into the table. Scoped to
+ * .vbt-root so it never touches the consumer's page, and the button reset only
+ * sets properties no utility controls (so custom-slot styling still wins).
+ */
+.vbt-root {
+  font-family:
+    ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica,
+    Arial, sans-serif;
+  font-size: 0.875rem;
+}
+.vbt-root .vbt-header-btn {
+  font-family: inherit;
+  background: none;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  line-height: inherit;
+}
