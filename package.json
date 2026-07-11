@@ -1,6 +1,6 @@
 {
   "name": "vue-virtual-bi-table",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "A high-performance, two-axis virtualized data table for Vue 3 — tens of thousands of rows × hundreds of columns, with drag-to-reorder, resizable sticky columns, sorting, and fully customizable header/cell slots.",
   "type": "module",
   "license": "MIT",
