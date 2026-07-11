@@ -17,6 +17,9 @@
           handle=".header-handler"
           filter=".handle"
           :prevent-on-filter="false"
+          :delay="TOUCH_DRAG_DELAY"
+          :delay-on-touch-only="true"
+          :touch-start-threshold="TOUCH_DRAG_THRESHOLD"
           :component-data="{
             tag: 'div',
             type: 'transition-group',
@@ -142,6 +145,9 @@
             direction="vertical"
             handle=".body-handle"
             tag="div"
+            :delay="TOUCH_DRAG_DELAY"
+            :delay-on-touch-only="true"
+            :touch-start-threshold="TOUCH_DRAG_THRESHOLD"
             :group="{ name: 'items', pull: true, put: true }"
             :sort="itemDraggable"
             :move="checkCanMoveItem"
@@ -209,6 +215,10 @@ interface Props {
 
 const OBSERVER_SETUP_DELAY = 100
 const SCROLL_SENSITIVITY_BUFFER = 50
+// On touch, wait this long (holding still) before a drag starts, so a swipe
+// scrolls instead of reordering; moving past the threshold first cancels it.
+const TOUCH_DRAG_DELAY = 200
+const TOUCH_DRAG_THRESHOLD = 5
 
 const componentId = useId()
 const headerScroll = ref<HTMLDivElement | null>(null)
